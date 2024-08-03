@@ -23,8 +23,8 @@ Author: lidehu 2201210265@stu.pku.edu.cn
     Start training by run
     ```
     cd /qwen2_trainer;
-pip install transformers -U;
-deepspeed --hostfile /etc/mpi/hostfile  --master_port=$(shuf -n 1 -i 10000-65535) \  #注意,我是使用阿里云的dlc训练,里面会自动分配通讯端口,主节点ip地址,根据自身情况酌情更改
+    pip install transformers -U;
+    deepspeed --hostfile /etc/mpi/hostfile  --master_port=$(shuf -n 1 -i 10000-65535) \  #注意,我是使用阿里云的dlc训练,里面会自动分配通讯端口,主节点ip地址,根据自身情况酌情更改
     trainer/train_compress.py \
     --deepspeed ./conf/deepspeed.json \
     --do_train \
