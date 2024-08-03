@@ -10,7 +10,7 @@ Author: lidehu 2201210265@stu.pku.edu.cn
 - 压缩还原方案存在如下问题:对齐阶段需要高质量对齐数据,需要压缩部分和llm预测部分要有很强的联系,目前业务数据对齐很弱.二是还原了不必要的内容,造成浪费,比如:今天天气真的太好呀，哈哈哈.其中'的'和'哈哈',没有还原的必要
 - 个人理解:和人类一样,llm在阅读了大量前置文段后,会高度浓缩的总结起来,后面遇到有联系的事物便会勾连起来-灵光乍现.理解难度小于生成,小模型压缩具有可行性.
 - 思路:更换promt为压缩的promt,不改变后续预测行为,蒸馏大模型内在压缩机制.
-- 做法:样本分为俩个部分:(a,b）,俩次前向:第一次llm(a,b)取出b部分输出的概率分布,第二次llm( 小模型(a) ,b),取出b部分输出的概率分布,计算俩者的kl散度.
+- 做法:样本分为俩个部分:(a,b）,俩次前向:第一次llm(a,b)取出b部分输出的概率分布,第二次:llm( 小模型(a) ,b),取出b部分输出的概率分布,计算俩者的kl散度.
 - 插播:有愿意一起写论文的朋友吗,共一或者你通讯(秋招太忙了,一个人干不来)
 
 ## 模型结构
@@ -22,7 +22,30 @@ Author: lidehu 2201210265@stu.pku.edu.cn
 
     Start training by run
     ```
-    bash Styled_vae_vq/run.sh 64 1e-4 /mnt/data/user/lidehu/vae/ALIP/out_put_stage1_6expert_std_noise_1_pect_1  1024 200#注意数据集路径更换!
+    cd /qwen2_trainer;
+pip install transformers -U;
+deepspeed --hostfile /etc/mpi/hostfile  --master_port=$(shuf -n 1 -i 10000-65535) \  #注意,我是使用阿里云的dlc训练,里面会自动分配通讯端口,主节点ip地址,根据自身情况酌情更改
+    trainer/train_compress.py \
+    --deepspeed ./conf/deepspeed.json \
+    --do_train \
+    --model_name_or_path /mnt/data/ \
+    --tokenizer_path /mnt/data/ \
+    --data_path /mnt/data/ \
+    --overwrite_cache \
+    --preprocessing_num_workers 32 \
+    --output_dir . \
+    --max_source_length 32 \
+    --max_target_length 512 \
+    --lr_scheduler_type cosine \
+    --num_train_epochs 3 \
+    --warmup_steps 0 \
+    --save_steps 1000 \
+    --per_device_train_batch_size 2 \
+    --gradient_accumulation_steps 2 \
+    --per_device_eval_batch_size 1 \
+    --logging_steps 10 \
+    --learning_rate 5e-5 \
+    --bf16
     ```
 
 ## Acknowledgement
