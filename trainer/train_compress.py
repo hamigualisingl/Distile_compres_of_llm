@@ -101,7 +101,15 @@ except:
                                                        torch_dtype=torch.bfloat16).cuda()
     except:
         logger.error(traceback.format_exc())
+for name, param in model.named_parameters():
+    if 'adaptor.' not in name and 'encoder.model.' not in name:
+        param.requires_grad = False
 
+params = []
+for name, param in model.named_parameters():
+    if param.requires_grad:
+        params.append(name)
+print(params)
 
 trainer = Seq2SeqTrainer(
     model=model,
