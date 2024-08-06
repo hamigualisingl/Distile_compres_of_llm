@@ -104,12 +104,16 @@ class Qwen2ForCausalLMModify(Qwen2ForCausalLM):
         logits = logits.float()[:,8:,:]#前8个是压缩的token
         labels=labels[..., 8:]#后面有填充部分要消除
         ############################################蒸馏部分
+        sum=labels.sum()
         student_probs = F.log_softmax(logits, dim=-1)  # 使用 log_softmax 以匹配 KLDivLoss 的输入要求
         teacher_probs = F.softmax(first_logits, dim=-1)
+        soft_loss = nn.KLDivLoss(reduction='none') 
+        mask = labels.unsqueeze(-1).expand_as(student_probs) 
+        distillation_loss = soft_loss(student_probs, teacher_probs)
+        distillation_loss = distillation_loss * mask
+        distillation_loss_sum = distillation_loss.sum(dim=-1)
 
-        soft_loss = nn.KLDivLoss(reduction="batchmean")
-
-        loss = None
+        loss = distillation_loss_sum.sum()/sum
         ############
         if not return_dict:
             output = (logits,) + outputs[1:]
