@@ -19,7 +19,7 @@ from transformers import set_seed
 
 from datasets import concatenate_datasets, interleave_datasets, load_dataset, load_from_disk
 
-from models.qwen_modify_align import Qwen2ForCausalLMModify
+from models.qwen_modify_compress import Qwen2ForCausalLMModify
 
 from arguments import ModelArguments, DataTrainingArguments
 import random
